@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="150b74c5-0165-4142-966d-20ae7721625e" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="689237da-1c0a-472a-af13-7382cd0ecceb" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="password" />
+	</db:config>
+	<flow name="errorpropagate_apiFlow" doc:id="bc26ef4d-b572-4c19-bfd8-110b9e6c1912" >
+		<http:listener doc:name="Listener" doc:id="8e785f7b-c002-4a03-b0b6-54c93ab06fc7" config-ref="HTTP_Listener_config" path="/fetch">
+			<http:error-response statusCode="#[vars.errorcode as Number]" >
+				<http:body ><![CDATA[#[vars.errormsg default "critical error"]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[attributes.queryParams.cust_id]" doc:name="Set Variable" doc:id="70d45956-0e2e-4b32-b665-37737fef7373" variableName="cust_id"/>
+		<logger level="INFO" doc:name="Logger" doc:id="049352b4-4861-4b33-b242-8da7c194116e" message='#[vars.cust_id ++ "-" ++ uuid()]'/>
+		<choice doc:name="Choice" doc:id="98601dad-514b-4230-99d0-f1f24ee46468" >
+			<when expression="#[vars.cust_id == null]">
+				<ee:transform doc:name="Transform Message" doc:id="9e3663b1-688c-4112-9f33-38d6a6bc7596">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "error"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:select doc:id="c09d9569-03ea-4674-86c1-0a9a9e1689e0" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from psk.airtel_customers where cust_id =:cust_id ]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"cust_id": vars.cust_id
+}]]]></db:input-parameters>
+		</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="7a25b5c4-7ce0-48cf-8bdf-630833361e0f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<choice doc:name="Choice" doc:id="3c1062df-12bb-4141-9397-b6b7fad49d17" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<ee:transform doc:name="Transform Message" doc:id="318854d8-a676-4a0d-a99d-9f6577f8d704" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "no data found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="84b647bd-3e83-4ef1-b94a-3fad4665b590" message='no records found id #[vars.cust_id]'/>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="b6b08fe0-1310-4849-8af1-37092000d7b1" message='#[payload.cust_name joinBy  "," ++ "-" ++ uuid()]' category="tracing with uuid" />
+				<ee:transform doc:name="Transform Message" doc:id="2afae38e-eccc-4d19-81af-2c86d4687596" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="237cb146-ccc6-4ffb-982c-681123087ed9" message="result data id #[vars.cust_id]" />
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="7e93d810-27d8-4c0f-8009-23d9fdf6437e" >
+				<logger level="INFO" doc:name="Logger" doc:id="64d8a54f-6ebc-44a0-a19c-f5b61533db41" message="#[payload]"/>
+				<ee:transform doc:name="Transform Message" doc:id="4fb7fec0-446f-429c-8b0e-6ad2feba3993" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="errorcode" ><![CDATA[%dw 2.0
+output application/json
+---
+500
+]]></ee:set-variable>
+						<ee:set-variable variableName="errormsg" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"errormsg": "connection failure"
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
