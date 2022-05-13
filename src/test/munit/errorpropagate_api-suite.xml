@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="errorpropagate_api-suite.xml" />
+	<munit:test name="errorpropagate_apiFlow-test-success" doc:id="cc30cee8-b46f-4370-b297-3e9acd385414" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Select" doc:id="f0b51a35-221a-4d66-a4fc-549a85eafb94" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c09d9569-03ea-4674-86c1-0a9a9e1689e0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://errorpropagateapiFlowtestsuccess\mock_payload.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="cust_id" value="#[output application/java --- readUrl('classpath://errorpropagateapiFlowtestsuccess\mock_variable_.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="621ffd07-5685-4197-a767-d0cff80bbbcc" >
+				<munit:payload value="#[readUrl('classpath://errorpropagateapiFlowtestsuccess\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://errorpropagateapiFlowtestsuccess\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to errorpropagate_apiFlow" doc:id="d02176b3-9ada-42ba-8c54-2228ddb9d556" name="errorpropagate_apiFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="7d58c303-6095-4d62-ba6e-7f581036d10d" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import errorpropagateapiFlowtestsuccess::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="errorpropagate_apiFlow-test-nodatafound" doc:id="2b1df7ef-601a-4a29-9df0-d8c4c873394b" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Select" doc:id="6e173344-6275-4865-9d27-0a7f370c8d34" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c09d9569-03ea-4674-86c1-0a9a9e1689e0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://errorpropagateapiFlowtestnodatafound\mock_payload.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="cust_id" value="#[output application/java --- readUrl('classpath://errorpropagateapiFlowtestnodatafound\mock_variable_.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="cae2a1d4-aac4-4321-b96e-1df6bf1139b1" >
+				<munit:payload value="#[readUrl('classpath://errorpropagateapiFlowtestnodatafound\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://errorpropagateapiFlowtestnodatafound\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to errorpropagate_apiFlow" doc:id="59d8740a-1c61-4bcf-809a-9d41108cc26d" name="errorpropagate_apiFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="9d34cfb0-d3f2-43d8-8beb-37a70ae9c045" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import errorpropagateapiFlowtestnodatafound::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="errorpropagate_apiFlow-test-error" doc:id="64291fb5-fbb1-4859-8482-eef1ca6c92ff" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Select" doc:id="bc15c9b3-d0ca-494c-8b6d-e1d0fcfcffdd" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c09d9569-03ea-4674-86c1-0a9a9e1689e0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+				
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+					<munit-tools:variables >
+						<munit-tools:variable key="cust_id" value="#[output application/java --- readUrl('classpath://errorpropagateapiFlowtestnodatafound\mock_variable_.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="822064c9-3df3-419e-bf5c-774fe962d400" >
+				<munit:payload value="#[readUrl('classpath://errorpropagateapiFlowtestnodatafound\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://errorpropagateapiFlowtestnodatafound\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<try doc:name="Try" doc:id="46519952-5eeb-4a81-99ca-1baebaf09a7b" >
+				<flow-ref doc:name="Flow-ref to errorpropagate_apiFlow" doc:id="9689473f-6bf7-4a44-a13c-ddd5efde6239" name="errorpropagate_apiFlow" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5c888f0e-de83-4d29-aef0-26372b4f5492" >
+						<logger level="INFO" doc:name="Logger" doc:id="5c11f758-de25-420e-bcc8-834d84e4f006" message="continue"/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="29b5f6f4-a925-4a3a-8ff1-8de4c2de4a5a" is='#[MunitTools::equalTo({&#10;	"errormsg": "connection failure"&#10;})]' expression="#[vars.errormsg]"/>
+
+		</munit:validation>
+	
+</munit:test>
+
+</mule>
